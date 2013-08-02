@@ -7,6 +7,12 @@ import urllib
 import urllib2
 import socket
 import sqlite3
+import sys
+import getopt
+import random
+import hashlib
+import re
+
 
 from funcs import *
 
@@ -25,6 +31,10 @@ class P2PChanWeb(resource.Resource):
   def render_GET(self, request):
     if getRequestPath(request).startswith('/manage'):
       return self.renderManage(request)
+    elif getRequestPath(request).startswith('/peerlist'):
+      return peerlist(self.p2pchan)
+    elif getRequestPath(request).startswith('/cactus'):
+      return cactus(self.p2pchan, request, self.stylesheet)
     else:
       return self.renderNormal(request)
     
@@ -33,7 +43,7 @@ class P2PChanWeb(resource.Resource):
       return self.renderManage(request)
     else:
       return self.renderNormal(request)
-    
+      
   def renderNormal(self, request):
     replyto = False
     page = numpages = 0
@@ -48,16 +58,22 @@ class P2PChanWeb(resource.Resource):
       if 'file' in request.args:
         if request.args['file'][0] != '':
           imageinfo = getImageInfo(request.args['file'][0])
-          if 'image/jpeg' in imageinfo[0] or 'image/png' in imageinfo[0] or 'image/gif' in imageinfo[0]:
-            socket.setdefaulttimeout(60)
-            params = urllib.urlencode({'key': '51d54904af112c52fc6b04f154134e7b', 'image': base64.b64encode(request.args['file'][0])})
-            req = urllib2.Request("http://imgur.com/api/upload.xml", params)
-            response = urllib2.urlopen(req)
-            hostresponse = parseImageHostResponse(response.read())
-            if hostresponse == []:
-              return formatError('Unable to upload file')
+          if request.args['host'][0] == "distibuted":
+            if 'image/jpeg' in imageinfo[0] or 'image/png' in imageinfo[0] or 'image/gif' in imageinfo[0]:
+              hostresponse = ["data:" + imageinfo[0] + ";base64," + base64.b64encode(request.args['file'][0]),"data:" + imageinfo[0] + ";base64," + base64.b64encode(request.args['file'][0])]
+            else:
+              return formatError('Invalid file format')
           else:
-            return formatError('Invalid file format')
+            if 'image/jpeg' in imageinfo[0] or 'image/png' in imageinfo[0] or 'image/gif' in imageinfo[0]:
+              socket.setdefaulttimeout(60)
+              params = urllib.urlencode({'key': '51d54904af112c52fc6b04f154134e7b', 'image': base64.b64encode(request.args['file'][0])})
+              req = urllib2.Request("http://imgur.com/api/upload.xml", params)
+              response = urllib2.urlopen(req)
+              hostresponse = parseImageHostResponse(response.read())
+              if hostresponse == []:
+                return formatError('Unable to upload file')
+            else:
+              return formatError('Invalid file format')
 
       if request.args['parent'][0] == "" and hostresponse == ['','']:
         return formatError('You must upload an image to start a new thread')

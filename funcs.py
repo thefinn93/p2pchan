@@ -6,6 +6,8 @@ import datetime
 import uuid
 import struct
 import re
+import commands
+
 from StringIO import StringIO
 
 import ntplib
@@ -41,6 +43,9 @@ def initializeDB(conn):
   except:
     pass
 
+def niceip(peerid):
+  return peerid # this can be used to name peers you know. I have removed my friend's IPs for obvious reasons
+
 def getRequestPath(request):
   request_split = str(request).split()
   return request_split[1]
@@ -72,7 +77,6 @@ def logTimestamp():
 
 def logMessage(message):
     print '[' + logTimestamp() + '] ' + message
-
 def timeTaken(time_start, time_finish):
   return str(round(time_finish - time_start, 2))
 
@@ -134,6 +138,7 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
   </title>
   <link rel="stylesheet" type="text/css" href="/css/global.css">
   <link rel="stylesheet" type="text/css" href="/css/""" + stylesheet + """.css" title=\"""" + stylesheet + """\">
+  <script type="text/javascript" src="/content/cactusmod.js"></script>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8">
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="-1">
@@ -149,6 +154,8 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
     <div class="postarea">
       <form name="postform" id="postform" action="/" method="post" enctype="multipart/form-data">
       """ + parenthtml + """
+      <table><tr><td><iframe src="http://geoiptool.com/webapi.php?type=1&LANG=en" height="275" width="200" frameborder="0" scrolling="no" id="ipmap"></iframe></td>
+      <td>
       <table class="postform">
         <tbody>
           <tr>
@@ -193,16 +200,26 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
             </td>
           </tr>
           <tr>
+            <td class="postblock">
+             Host
+            </td>
+            <td>
+             <select name="host"><option value="imgur">imgur</option><option value="distibuted" selected="selected">Distributed</option></select>
+            </td>
+          </tr>
+          <tr>
             <td colspan="2" class="rules">
               <ul>
                 <li>Supported file types are: GIF, JPG, PNG</li>
                 <li>Images greater than 90x90 pixels will be thumbnailed.</li>
-                <li>Currently """ + str(len(p2pchan.kaishi.peers)) + """ other users online.</li>
+                """ + listmissingthreads(p2pchan) + """
+                <li id="peerlist">""" + peerlist(p2pchan) + """</li>
               </ul>
             </td>
           </tr>
         </tbody>
       </table>
+     </td></tr></table>
       </form>
     </div>
     <hr>
@@ -425,3 +442,58 @@ def getImageInfo(data):
             pass
 
     return content_type, width, height
+
+def peerlist(p2pchan):
+    output = ""
+    if len(p2pchan.kaishi.peers) != 1:
+        output = "There are currently " + str(len(p2pchan.kaishi.peers)) + " other users online [<a href=\"javascript:void(0);\" onclick=\"refreshProvider()\">Refresh Peer Provider</a>]<span id=\"refreshprovider\"></span>\n<ul>\n"
+    else:
+        output = "There is currently " + str(len(p2pchan.kaishi.peers)) + " other user online [<a href=\"javascript:void(0);\" onclick=\"refreshProvider()\">Refresh Peer Provider</a>]<span id=\"refreshprovider\"></span>\n<ul>\n"
+    for ip in p2pchan.kaishi.peers:
+        if curl:
+            output = output + "\n<li><a href=\"javascript:void(0)\" onclick=\"showIP('" + ip.partition(':')[0] + "')\">" + niceip(ip) + "</a> - " + commands.getoutput("curl -s \"http://www.geody.com/geoip.php?ip=" + ip.partition(':')[0] + "\" | sed '/^IP:/!d;s/<[^>][^>]*>//g'") + "</li>"
+        else:
+            output = output + "\n<li><a href=\"javascript:void(0)\" onclick=\"showIP('" + ip.partition(':')[0] + "')\">" + niceip(ip) + "</a></li>"
+    output = output + "</ul>\n";
+    return output
+
+def listmissingthreads(p2pchan):
+  import sqlite3
+  output = ''
+  missingthreads = []
+  conn = sqlite3.connect(localFile('posts.db'))
+  c = conn.cursor()
+  c2 = conn.cursor()
+  c.execute('select * from posts where parent != \'\'')
+  for post in c:
+    c2.execute('select count(*) from posts where guid = \'' + post[1] + '\'')
+    for row in c2:
+      if row[0] == 0 and post[1] not in missingthreads:
+        missingthreads.append(post[1])
+  if len(missingthreads) > 0:
+    output += "<li>You have " + str(len(missingthreads)) + " missing threads:\n<ul>"
+    for missingthread in missingthreads:
+      output += '<li>' + missingthread + ' - <a href="javascript: void(0);" onclick="getthread(\'' + missingthread + '\',this)">Request thread</a></li>'
+    output += "</ul></li>"
+  else:
+    output += "<li>You have no missing threads</li>"
+  return str(output)
+
+def cactus(p2pchan,request,stylesheet):
+  if 'refreshpeers' in request.args:
+    p2pchan.kaishi.fetchPeersFromProvider()
+    return "Peers Refreshed"
+  if 'peerlist' in request.args:
+    return peerlist(p2pchan)
+  if 'missingthreads' in request.args:
+    return listmissingthreads(p2pchan)
+  if 'getthread' in request.args:
+    p2pchan.kaishi.sendData('THREAD', request.args['getthread'][0])
+    return 'Request sent. Go to thread'
+  else:  # I had been calling my version "cactus mod", and have been removing that before putting it on git, but 
+    text = """<div class="logo"><img src="/content/icon.png"> Cactus Mod v""" + cactusModVersion + """</div>
+<div id="cactusmodbox" style="background-color: #AAFFAA; font-family: arial; color: #AA0000;">Cactus Mod is my modification of P2PChan, currently at version """ + cactusModVersion + """. I have lots of things I wish to do with it, and am always coming up with new ones. Here's a short list of them. If you have anything else you want feel free to ask.
+<ul>
+<li>Encrypted/signed messages. Probably using PGP</li>
+</ul>"""
+    return renderManagePage(text,stylesheet)
