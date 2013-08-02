@@ -154,8 +154,6 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
     <div class="postarea">
       <form name="postform" id="postform" action="/" method="post" enctype="multipart/form-data">
       """ + parenthtml + """
-      <table><tr><td><iframe src="http://geoiptool.com/webapi.php?type=1&LANG=en" height="275" width="200" frameborder="0" scrolling="no" id="ipmap"></iframe></td>
-      <td>
       <table class="postform">
         <tbody>
           <tr>
@@ -219,7 +217,6 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
           </tr>
         </tbody>
       </table>
-     </td></tr></table>
       </form>
     </div>
     <hr>
@@ -450,10 +447,7 @@ def peerlist(p2pchan):
     else:
         output = "There is currently " + str(len(p2pchan.kaishi.peers)) + " other user online [<a href=\"javascript:void(0);\" onclick=\"refreshProvider()\">Refresh Peer Provider</a>]<span id=\"refreshprovider\"></span>\n<ul>\n"
     for ip in p2pchan.kaishi.peers:
-        if curl:
-            output = output + "\n<li><a href=\"javascript:void(0)\" onclick=\"showIP('" + ip.partition(':')[0] + "')\">" + niceip(ip) + "</a> - " + commands.getoutput("curl -s \"http://www.geody.com/geoip.php?ip=" + ip.partition(':')[0] + "\" | sed '/^IP:/!d;s/<[^>][^>]*>//g'") + "</li>"
-        else:
-            output = output + "\n<li><a href=\"javascript:void(0)\" onclick=\"showIP('" + ip.partition(':')[0] + "')\">" + niceip(ip) + "</a></li>"
+        output = output + "\n<li><a href=\"javascript:void(0)\" onclick=\"showIP('" + ip.partition(':')[0] + "')\">" + niceip(ip) + "</a></li>"
     output = output + "</ul>\n";
     return output
 
@@ -480,9 +474,6 @@ def listmissingthreads(p2pchan):
   return str(output)
 
 def cactus(p2pchan,request,stylesheet):
-  if 'refreshpeers' in request.args:
-    p2pchan.kaishi.fetchPeersFromProvider()
-    return "Peers Refreshed"
   if 'peerlist' in request.args:
     return peerlist(p2pchan)
   if 'missingthreads' in request.args:
@@ -490,10 +481,6 @@ def cactus(p2pchan,request,stylesheet):
   if 'getthread' in request.args:
     p2pchan.kaishi.sendData('THREAD', request.args['getthread'][0])
     return 'Request sent. Go to thread'
-  else:  # I had been calling my version "cactus mod", and have been removing that before putting it on git, but 
-    text = """<div class="logo"><img src="/content/icon.png"> Cactus Mod v""" + cactusModVersion + """</div>
-<div id="cactusmodbox" style="background-color: #AAFFAA; font-family: arial; color: #AA0000;">Cactus Mod is my modification of P2PChan, currently at version """ + cactusModVersion + """. I have lots of things I wish to do with it, and am always coming up with new ones. Here's a short list of them. If you have anything else you want feel free to ask.
-<ul>
-<li>Encrypted/signed messages. Probably using PGP</li>
-</ul>"""
+  else:
+    text = """Lolhai"""
     return renderManagePage(text,stylesheet)
