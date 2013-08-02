@@ -309,7 +309,10 @@ def buildPost(post, conn, numreplies=-1):
     onclick = ' onclick="javascript:document.postform.message.value = document.postform.message.value + \'>>' + post[POST_GUID][0:5] + '\';return false;"'
 
   if post[POST_PARENT] == "" and post[POST_FILE] != "":
-    html += '<a target="_blank" href="image/' + post[POST_GUID] + '"><img src="image/' + post[POST_GUID] + '" width="200" height="200" alt="' + post[POST_GUID] + '" class="thumb"></a>'
+    if "data" in post[POST_FILE]:
+      html += '<a target="_blank" href="' + post[POST_FILE] + '"><img src="' + post[POST_FILE] + '" width="200" height="200" alt="' + post[POST_GUID] + '" class="thumb"></a>'
+    else:
+      html += '<a target="_blank" href="image/' + post[POST_GUID] + '"><img src="image/' + post[POST_GUID] + '" width="200" height="200" alt="' + post[POST_GUID] + '" class="thumb"></a>'
   else:
     html += """<table>
     <tbody>
