@@ -20,11 +20,12 @@ import zlib
 import pickle
 import thread
 import socket
+import cjdnsadmin
 
 from funcs import toEntity
 
 class kaishi(object):
-  def __init__(self):
+  def __init__(self, host):
     # Set all defaults
     socket.setdefaulttimeout(5)
     self.protocol_version = 1
@@ -34,7 +35,7 @@ class kaishi(object):
     self.peers = []
     self.uidlist = []
     self.providers = []
-    self.host = urllib.urlopen('http://ip.paq.cc/').read()
+    self.host = host
     self.port = 44545
     self.peerid = self.host + ':' + str(self.port)
 
@@ -225,26 +226,18 @@ class kaishi(object):
   def makePeerList(self):
     peers = {}
     [peers.update({peerid: self.getPeerNickname(peerid)}) for peerid in self.peers]
-
     return pickle.dumps(peers)
 
   def fetchPeersFromProvider(self):
-    added_nodes = 0
-    self.debugMessage('Fetching peers from provider')
-    for provider in self.providers:
-      known_nodes = urllib.urlopen(provider + '?port=' + str(self.port)).read()
-      if known_nodes.startswith('?'):
-        if len(known_nodes) > 1:
-          known_nodes = known_nodes[1:].split('\n')
-          for known_node in known_nodes:
-            if known_node != '':
-              added_nodes += 1
-              self.addPeer(known_node)
-        else:
-          self.debugMessage(provider + ' returned zero peers.')
-      else:
-        self.debugMessage(provider + ' returned an invalid result (first character was not "?")')
-    self.debugMessage('Received ' + str(added_nodes) + ' peers from providers')
+    cjdns = cjdnsadmin.connectWithAdminInfo()
+    more = True
+    page = 0
+    while more:
+      table = cjdns.NodeStore_dumpTable(page)
+      for node in table['routingTable']:
+        self.addPeer(node['ip'] + ":" + str(self.port))
+      more = "more" in table
+      page += 1
 
   def debugMessage(self, message):
     if self.debug:

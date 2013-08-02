@@ -8,8 +8,7 @@ from kaishi import kaishi
 
 class P2PChan(object):
   def __init__(self, kaishi_port, providers, postsperpage):
-    self.kaishi = kaishi()
-    self.kaishi.port = kaishi_port
+    self.kaishi = kaishi(raw_input("I know this is kinda derpy but I need your cjdns IP: "))
     self.kaishi.peerid = self.kaishi.host + ':' + str(kaishi_port)
     self.kaishi.providers = providers
     self.kaishi.handleIncomingData = self.handleIncomingData
@@ -19,12 +18,7 @@ class P2PChan(object):
 
     self.postsperpage = postsperpage
 
-    try:
-      self.kaishi.start()
-    except:
-      logMessage("FATAL ERROR: Unable to initialize the network on port " + str(kaishi_port) + ".  Is another copy of P2PChan running?")
-      raw_input('')
-      sys.exit()
+    self.kaishi.start()
     
   #==============================================================================
   # kaishi hooks
@@ -137,10 +131,6 @@ if __name__=='__main__':
       i += 1
     except:
       break
-  if 'http://p2p.paq.cc/provider.php' not in providers:
-    providers.append('http://p2p.paq.cc/provider.php')
-  if 'http://p2p2.paq.cc/provider.php' not in providers:
-    providers.append('http://p2p2.paq.cc/provider.php')
 
   config = ConfigParser.ConfigParser()
   config.add_section('p2pchan')
