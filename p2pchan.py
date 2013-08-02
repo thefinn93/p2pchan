@@ -8,13 +8,10 @@ import commands
 from funcs import *
 from kaishi import kaishi
 
-curl = 0           # set this to 1 if you have cURL installed (http://curl.haxx.se). It is used for text based geolocation of peers. Also the one in funcs.py
-
 class P2PChan(object):
-  def __init__(self, kaishi_port, providers, postsperpage):
-    self.kaishi = kaishi(raw_input("I know this is kinda derpy but I need your cjdns IP: "))
+  def __init__(self, host, kaishi_port, postsperpage):
+    self.kaishi = kaishi(host)
     self.kaishi.peerid = self.kaishi.host + ':' + str(kaishi_port)
-    self.kaishi.providers = providers
     self.kaishi.handleIncomingData = self.handleIncomingData
     self.kaishi.handleAddedPeer = self.handleAddedPeer
     self.kaishi.handlePeerNickname = self.handlePeerNickname
@@ -71,21 +68,13 @@ class P2PChan(object):
 
   def handleAddedPeer(self, peerid):
     if peerid != self.kaishi.peerid:
-      if curl:
-        logme = commands.getoutput("curl -s \"http://www.geody.com/geoip.php?ip=" + peerid.partition(':')[0] + "\" | sed '/^IP:/!d;s/<[^>][^>]*>//g'")
-      else:
-        logme = ''
-      logMessage(niceip(peerid) + " has joined the network. " + logme)
+      logMessage(niceip(peerid) + " has joined the network. ")
 
   def handlePeerNickname(self, peerid, nick):
     pass
     
   def handleDroppedPeer(self, peerid):
-    if curl:
-      logme = commands.getoutput("curl -s \"http://www.geody.com/geoip.php?ip=" + peerid.partition(':')[0] + "\" | sed '/^IP:/!d;s/<[^>][^>]*>//g'")
-    else:
-      logme = ''
-    logMessage(niceip(peerid) + " has dropped from the network. " + logme)
+    logMessage(niceip(peerid) + " has dropped from the network. ")
   #==============================================================================
     
   def havePostWithGUID(self, guid):
@@ -114,7 +103,6 @@ if __name__=='__main__':
   web_port = 8080
   stylesheet = 'futaba'
   postsperpage = 10
-  providers = []
   
   try:
     if config.get("p2pchan", "debug").lower() == 'true':
@@ -137,14 +125,13 @@ if __name__=='__main__':
     postsperpage = config.get("p2pchan", "posts per page")
   except:
     pass
-  
-  i = 0
-  while 1:
-    try:
-      providers.append(config.get("p2pchan", "provider" + str(i)))
-      i += 1
-    except:
-      break
+  if len(sys.argv) == 2:
+    host = sys.argv[1]
+  elif config.hasoption("p2pchan", "ip"):
+    host = config.get("p2pchan", "ip")
+  else:
+    host = raw_input("this is kinda derpy, but I need your CJDNS ip: ")
+
 
   config = ConfigParser.ConfigParser()
   config.add_section('p2pchan')
@@ -152,10 +139,8 @@ if __name__=='__main__':
   config.set('p2pchan', 'web port', web_port)
   config.set('p2pchan', 'stylesheet', stylesheet)
   config.set('p2pchan', 'posts per page', postsperpage)
-  i = 0
-  for provider in providers:
-    config.set('p2pchan', 'provider' + str(i), provider)
-    i += 1
+  config.set('p2pchan', 'ip', host)
+
   if debug:
     config.set('p2pchan', 'debug', 'true')
 
@@ -166,7 +151,7 @@ if __name__=='__main__':
   conn = sqlite3.connect(localFile('posts.db'))
   initializeDB(conn)
 
-  p2pchan = P2PChan(int(kaishi_port), providers, postsperpage)
+  p2pchan = P2PChan(host, int(kaishi_port), postsperpage)
   p2pchan.kaishi.debug = debug
 
   try:

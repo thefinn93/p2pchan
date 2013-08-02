@@ -443,9 +443,9 @@ def getImageInfo(data):
 def peerlist(p2pchan):
     output = ""
     if len(p2pchan.kaishi.peers) != 1:
-        output = "There are currently " + str(len(p2pchan.kaishi.peers)) + " other users online [<a href=\"javascript:void(0);\" onclick=\"refreshProvider()\">Refresh Peer Provider</a>]<span id=\"refreshprovider\"></span>\n<ul>\n"
+        output = "There are currently " + str(len(p2pchan.kaishi.peers)) + " other users online\n<ul>\n"
     else:
-        output = "There is currently " + str(len(p2pchan.kaishi.peers)) + " other user online [<a href=\"javascript:void(0);\" onclick=\"refreshProvider()\">Refresh Peer Provider</a>]<span id=\"refreshprovider\"></span>\n<ul>\n"
+        output = "There is currently " + str(len(p2pchan.kaishi.peers)) + " other user online\n<ul>\n"
     for ip in p2pchan.kaishi.peers:
         output = output + "\n<li><a href=\"javascript:void(0)\" onclick=\"showIP('" + ip.partition(':')[0] + "')\">" + niceip(ip) + "</a></li>"
     output = output + "</ul>\n";
