@@ -15,10 +15,6 @@ function refreshPeers()
  xhr.send(null)
  }
 
-function showIP(ip)
- {
- document.getElementById('ipmap').setAttribute('src', 'http://geoiptool.com/webapi.php?type=1&LANG=en&IP=' + ip);
- }
 
 function refreshProvider()
  {
@@ -58,4 +54,4 @@ function getthread(thread,elm)
  xhr.send(null)
  }
 
-setInterval('refreshPeers()',5000)
+setInterval('refreshPeers()', 500)
