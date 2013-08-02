@@ -46,8 +46,8 @@ class kaishi(object):
     self.handleDroppedPeer = None
 
   def start(self):
-    self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    self.socket.bind(('', self.port))
+    self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    self.socket.bind((self.host, self.port, 0, 0))
     self.socket.settimeout(5)
     thread.start_new_thread(self.receiveData, ())
     thread.start_new_thread(self.pingAllPeers, ())
