@@ -138,7 +138,7 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
   </title>
   <link rel="stylesheet" type="text/css" href="/css/global.css">
   <link rel="stylesheet" type="text/css" href="/css/""" + stylesheet + """.css" title=\"""" + stylesheet + """\">
-  <script type="text/javascript" src="/content/cactusmod.js"></script>
+  <script type="text/javascript" src="/content/script.js"></script>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8">
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="-1">
