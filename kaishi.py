@@ -98,6 +98,7 @@ class kaishi(object):
       data = None
       try:
         data, address = self.socket.recvfrom(65536)
+        self.debugMessage("OMG GOT DATA FROM " + str(address))
         data = zlib.decompress(data)
 
         bouncer_peerid = address[0] + ':' + str(address[1]) # peerid of the last bounce
@@ -106,8 +107,9 @@ class kaishi(object):
         data = ':'.join([protocol_version, identifier, bounce, uid, origin, message])
 
         peerid = self.decodeTransitSafePeerID(origin) # peerid which sent the original message
-        self.debugMessage("Received something from " + peerid)
+        self.debugMessage("Received " + identifier + " from " + peerid)
       except socket.timeout:
+        self.debugMessage("Damn, timed out")
         pass
       except:
         self.debugMessage('Failed to establish a connection.')

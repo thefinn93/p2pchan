@@ -9,7 +9,8 @@ from funcs import *
 from kaishi import kaishi
 
 class P2PChan(object):
-  def __init__(self, host, kaishi_port, postsperpage):
+  def __init__(self, host, kaishi_port, postsperpage, config):
+    self.config = config
     self.kaishi = kaishi(host)
     self.kaishi.peerid = self.kaishi.host + ':' + str(kaishi_port)
     self.kaishi.handleIncomingData = self.handleIncomingData
@@ -57,24 +58,25 @@ class P2PChan(object):
       c2 = conn.cursor()
       c.execute('select * from posts where parent = \'\' order by bumped desc limit 50')
       for post in c:
+        logMessage("Sending posts to " + niceip(self, peerid))
         self.kaishi.sendData('POST', encodePostData(post), to=peerid, bounce=False)
         c2.execute('select * from posts where parent = \'' + post[0] + '\'')
         for reply in c2:
           self.kaishi.sendData('POST', encodePostData(reply), to=peerid, bounce=False)
           i += 1
         i += 1
-      logMessage(niceip(peerid) + ' has requested to receive the latest threads.  Sent ' + str(i) + ' posts.')
+      logMessage(niceip(self, peerid) + ' has requested to receive the latest threads.  Sent ' + str(i) + ' posts.')
     conn.close
 
   def handleAddedPeer(self, peerid):
     if peerid != self.kaishi.peerid:
-      logMessage(niceip(peerid) + " has joined the network. ")
+      logMessage(niceip(self, peerid) + " has joined the network. ")
 
   def handlePeerNickname(self, peerid, nick):
     pass
     
   def handleDroppedPeer(self, peerid):
-    logMessage(niceip(peerid) + " has dropped from the network. ")
+    logMessage(niceip(self, peerid) + " has dropped from the network. ")
   #==============================================================================
     
   def havePostWithGUID(self, guid):
@@ -133,8 +135,9 @@ if __name__=='__main__':
     host = raw_input("this is kinda derpy, but I need your CJDNS ip: ")
 
 
-  config = ConfigParser.ConfigParser()
-  config.add_section('p2pchan')
+  #config = ConfigParser.ConfigParser()
+  if not config.has_section("p2pchan"):
+    config.add_section('p2pchan')
   config.set('p2pchan', 'kaishi port', kaishi_port)
   config.set('p2pchan', 'web port', web_port)
   config.set('p2pchan', 'stylesheet', stylesheet)
@@ -151,7 +154,7 @@ if __name__=='__main__':
   conn = sqlite3.connect(localFile('posts.db'))
   initializeDB(conn)
 
-  p2pchan = P2PChan(host, int(kaishi_port), postsperpage)
+  p2pchan = P2PChan(host, int(kaishi_port), postsperpage, config)
   p2pchan.kaishi.debug = debug
 
   try:

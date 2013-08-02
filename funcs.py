@@ -43,9 +43,13 @@ def initializeDB(conn):
   except:
     pass
 
-def niceip(peerid):
+def niceip(p2pchan, peerid):
   ip = peerid.split(":")[0:-1]
-  return ":".join(ip)
+  nice = ":".join(ip)
+  if p2pchan.config.has_section("names"):
+    if p2pchan.config.has_option("names", peerid.replace(":","-")):
+      nice = p2pchan.config.get("names", peerid.replace(":","-"))
+  return nice
 
 def getRequestPath(request):
   request_split = str(request).split()
@@ -448,7 +452,7 @@ def peerlist(p2pchan):
     else:
         output = "There is currently " + str(len(p2pchan.kaishi.peers)) + " other user online\n<ul>\n"
     for ip in p2pchan.kaishi.peers:
-        output = output + "\n<li>" + niceip(ip) + "</li>"
+        output = output + "\n<li>" + niceip(p2pchan, ip) + "</li>"
     output = output + "</ul>\n";
     return output
 
@@ -485,6 +489,18 @@ def cactus(p2pchan,request,stylesheet):
   elif 'addpeer' in request.args:
     p2pchan.kaishi.addPeer(request.args['addpeer'][0])
     return "Added " + request.args['addpeer'][0]
+  elif 'setname' in request.args:
+    if "name" in request.args and "ip" in request.args:
+      if not p2pchan.config.has_section("names"):
+        p2pchan.config.add_section("names")
+      peerid = (request.args['ip'][0] + ":" + str(p2pchan.kaishi.port)).replace(":", "-")
+      p2pchan.config.set("names", peerid, request.args['name'][0])
+      f = open(localFile('p2pchan.ini'), 'w')
+      p2pchan.config.write(f)
+      f.close()
+      return renderManagePage(peerid + " is now known as " + request.args['name'][0], stylesheet)
+    else:
+      return renderManagePage("Please specify a name and an IP!", stylesheet)
   else:
     text = """Lolhai"""
     return renderManagePage(text,stylesheet)

@@ -147,6 +147,7 @@ class P2PChanWeb(resource.Resource):
       self.p2pchan.kaishi.sendData('THREAD', request.args['getthread'][0])
       text += 'Sent thread request. <a href="/?res=' + request.args['getthread'][0] + '">Go to thread</a>'
     elif 'fetchthreads' in request.args:
+      self.debugMessage("Requesting threads...")
       self.p2pchan.kaishi.sendData('THREADS', "")
       text += 'Sent thread fetch request.'
     elif 'hide' in request.args and 'post' in request.args:
