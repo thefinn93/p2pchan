@@ -44,7 +44,8 @@ def initializeDB(conn):
     pass
 
 def niceip(peerid):
-  return peerid # this can be used to name peers you know. I have removed my friend's IPs for obvious reasons
+  ip = peerid.split(":")[0:-1]
+  return ":".join(ip)
 
 def getRequestPath(request):
   request_split = str(request).split()
@@ -309,10 +310,7 @@ def buildPost(post, conn, numreplies=-1):
     onclick = ' onclick="javascript:document.postform.message.value = document.postform.message.value + \'>>' + post[POST_GUID][0:5] + '\';return false;"'
 
   if post[POST_PARENT] == "" and post[POST_FILE] != "":
-    if "data" in post[POST_FILE]:
-      html += '<a target="_blank" href="' + post[POST_FILE] + '"><img src="' + post[POST_FILE] + '" width="200" height="200" alt="' + post[POST_GUID] + '" class="thumb"></a>'
-    else:
-      html += '<a target="_blank" href="image/' + post[POST_GUID] + '"><img src="image/' + post[POST_GUID] + '" width="200" height="200" alt="' + post[POST_GUID] + '" class="thumb"></a>'
+    html += '<a target="_blank" href="' + post[POST_FILE] + '"><img src="' + post[POST_FILE] + '" width="200" height="200" alt="' + post[POST_GUID] + '" class="thumb"></a>'
   else:
     html += """<table>
     <tbody>
@@ -450,7 +448,7 @@ def peerlist(p2pchan):
     else:
         output = "There is currently " + str(len(p2pchan.kaishi.peers)) + " other user online\n<ul>\n"
     for ip in p2pchan.kaishi.peers:
-        output = output + "\n<li><a href=\"javascript:void(0)\" onclick=\"showIP('" + ip.partition(':')[0] + "')\">" + niceip(ip) + "</a></li>"
+        output = output + "\n<li>" + niceip(ip) + "</li>"
     output = output + "</ul>\n";
     return output
 
@@ -479,11 +477,14 @@ def listmissingthreads(p2pchan):
 def cactus(p2pchan,request,stylesheet):
   if 'peerlist' in request.args:
     return peerlist(p2pchan)
-  if 'missingthreads' in request.args:
+  elif 'missingthreads' in request.args:
     return listmissingthreads(p2pchan)
-  if 'getthread' in request.args:
+  elif 'getthread' in request.args:
     p2pchan.kaishi.sendData('THREAD', request.args['getthread'][0])
     return 'Request sent. Go to thread'
+  elif 'addpeer' in request.args:
+    p2pchan.kaishi.addPeer(request.args['addpeer'][0])
+    return "Added " + request.args['addpeer'][0]
   else:
     text = """Lolhai"""
     return renderManagePage(text,stylesheet)

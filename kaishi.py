@@ -106,6 +106,7 @@ class kaishi(object):
         data = ':'.join([protocol_version, identifier, bounce, uid, origin, message])
 
         peerid = self.decodeTransitSafePeerID(origin) # peerid which sent the original message
+        self.debugMessage("Received something from " + peerid)
       except socket.timeout:
         pass
       except:
