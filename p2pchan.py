@@ -127,7 +127,7 @@ if __name__=='__main__':
     pass
   if len(sys.argv) == 2:
     host = sys.argv[1]
-  elif config.hasoption("p2pchan", "ip"):
+  elif config.has_option("p2pchan", "ip"):
     host = config.get("p2pchan", "ip")
   else:
     host = raw_input("this is kinda derpy, but I need your CJDNS ip: ")
