@@ -98,7 +98,6 @@ class kaishi(object):
       data = None
       try:
         data, address = self.socket.recvfrom(65536)
-        self.debugMessage("OMG GOT DATA FROM " + str(address))
         data = zlib.decompress(data)
 
         bouncer_peerid = address[0] + ':' + str(address[1]) # peerid of the last bounce

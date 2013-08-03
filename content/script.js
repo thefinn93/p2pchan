@@ -1,7 +1,8 @@
 function refreshPeers()
  {
+    var peerRefreshToken = document.getElementById("peerRefreshToken").value;
  xhr = new XMLHttpRequest;
- xhr.onreadystatechange=function()
+ xhr.onreadystatechange = function()
   {
   if(xhr.readyState == 4)
    {
@@ -11,7 +12,7 @@ function refreshPeers()
     {document.getElementById('peerlist').innerHTML = "<font color=\"#FF0000\"><b>Could not retrieve peerlist</b></font>";}
    }
   }
- xhr.open("GET","/cactus?peerlist=" + Math.random(),true)
+ xhr.open("GET","/cactus?peerlist=" + Math.random() ,true)
  xhr.send(null)
  }
 
@@ -34,7 +35,7 @@ function refreshProvider()
  xhr.send(null)
  }
 
-function getthread(thread,elm)
+function getthread(thread, elm)
  {
  elm.innerHTML = "<img src=\"/content/throbber_arrow.gif\" />";
  elm.removeAttribute('onlcick');
@@ -50,15 +51,15 @@ function getthread(thread,elm)
     {elm.innerHTML.innerHTML = "<font color=\"#FF0000\"><b>Failed to fetch thread. Is P2PChan still running?</b></font>";}
    }
   }
- xhr.open("GET","/cactus?getthread=" + thread + "&rand=" + Math.random(),true)
+ xhr.open("GET","/cactus?getthread=" + thread + "&rand=" + Math.random() + "&token=" + token,true)
  xhr.send(null)
  }
  
 function changename(ip) {
    name = prompt("What do you want to call " + ip + "?");
    xhr = new XMLHttpRequest();
-   xhr.open("GET", "/cactus?setname=true&ip=" + ip + "&name=" + name, true);
+   xhr.open("GET", "/cactus?setname=true&ip=" + ip + "&name=" + name + "&token=" + token, true);
    xhr.send(null);
 }
 
-setInterval('refreshPeers()', 500);
+setInterval(refreshPeers, 500);

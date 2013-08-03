@@ -4,6 +4,7 @@ import os
 import sqlite3
 import ConfigParser
 import commands
+import random
 
 from funcs import *
 from kaishi import kaishi
@@ -21,7 +22,16 @@ class P2PChan(object):
     self.postsperpage = postsperpage
 
     self.kaishi.start()
-    
+  
+  def makeToken(self):
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+    tokenlength = random.randint(10, 30)
+    token = ""
+    for i in range(0, tokenlength):
+      token += random.choice(chars)
+    self.tokens.append(token)
+    return token
+  
   #==============================================================================
   # kaishi hooks
   def handleIncomingData(self, peerid, identifier, uid, message):
@@ -169,6 +179,8 @@ if __name__=='__main__':
 
   logMessage('Now available on the P2PChan network.')
   logMessage('Please ensure UDP port ' + str(kaishi_port) + ' is open.')
+  p2pchan.kaishi.debugMessage("Requesting threads...")
+  p2pchan.kaishi.sendData('THREADS', "")
 
   if not os.path.isfile(localFile('nodemode')):
     from twisted.web import static, server, resource

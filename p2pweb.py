@@ -12,7 +12,7 @@ import getopt
 import random
 import hashlib
 import re
-
+import random
 
 from funcs import *
 
@@ -27,12 +27,19 @@ class P2PChanWeb(resource.Resource):
   def __init__(self, p2pchan, stylesheet):
     self.p2pchan = p2pchan
     self.stylesheet = stylesheet
+    self.p2pchan.tokens = []
     
   def render_GET(self, request):
     if getRequestPath(request).startswith('/manage'):
-      return self.renderManage(request)
+      if self.hasValidToken(request):
+        return self.renderManage(request)
+      else:
+        return "Fuck off"
     elif getRequestPath(request).startswith('/peerlist'):
-      return peerlist(self.p2pchan)
+      if self.hasValidToken(request):
+        return peerlist(self.p2pchan)
+      else:
+        return "Fuck off"
     elif getRequestPath(request).startswith('/cactus'):
       return cactus(self.p2pchan, request, self.stylesheet)
     else:
@@ -40,10 +47,21 @@ class P2PChanWeb(resource.Resource):
     
   def render_POST(self, request):
     if getRequestPath(request).startswith('/manage'):
-      return self.renderManage(request)
+      if self.hasValidToken(request):
+        return self.renderManage(request)
+      else:
+        return "Fuck off"
     else:
       return self.renderNormal(request)
-      
+  
+  def hasValidToken(self, request):
+    response = False
+    if "token" in request.args:
+      if request.args['token'] in self.p2pchan.tokens:
+        response = True
+        self.p2pchan.tokens.remove(request.args['token'])
+    return response
+
   def renderNormal(self, request):
     replyto = False
     page = numpages = 0
@@ -175,6 +193,7 @@ class P2PChanWeb(resource.Resource):
     if text == '':
       text += """<table width="100%" border="0"><tr width="100%"><td width="50%">
       <form action="/manage" method="get">
+      <input type="hidden" name="token" value=\"""" + self.makeToken() + """\" />
       <fieldset>
       <legend>
       Fetch Full Thread
@@ -219,13 +238,19 @@ class P2PChanWeb(resource.Resource):
         text += "If you receive a reply to a thread which you do not yet have, it will appear in this list."
       text += """<br><br>
       Alternatively, you can send out a request for some of the latest threads which you have not yet received any replies for:<br>
-      <form action="/manage" method="get"><input type="submit" name="fetchthreads" value="Fetch Threads" class="managebutton"></form>
+      <form action="/manage" method="get">
+      <input type="hidden" name="token" value=\"""" + self.makeToken() + """\" />
+      <input type="submit" name="fetchthreads" value="Fetch Threads" class="managebutton">
+      </form>
       </fieldset>
       <fieldset>
       <legend>
       Refresh Peer Provider
       </legend>
-      <form action="/manage" method="get"><input type="submit" name="peers" value="Refresh Peers" class="managebutton"></form>
+      <form action="/manage" method="get">
+      <input type="hidden" name="token" value=\"""" + self.makeToken() + """\" />
+      <input type="submit" name="peers" value="Refresh Peers" class="managebutton">
+      </form>
       </fieldset></td><td width="50%" valign="top">
       <fieldset>
       <legend>

@@ -98,7 +98,7 @@ def pageNavigator(page, numpages):
       previous = ""
     else:
       previous = '<input type="hidden" name="ind" value="' + previous + '">'
-    page_navigator += '<form method="get" action="/">' + previous + '<input value="Previous" type="submit"></form>'
+    page_navigator += ' method="get" action="/">' + previous + '<input value="Previous" type="submit"></form>'
 
   page_navigator += "</td><td>"
 
@@ -158,6 +158,7 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
     <hr width="90%" size="1">""" + reshtml + """
     <div class="postarea">
       <form name="postform" id="postform" action="/" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="token" value=\"""" + p2pchan.makeToken() + """\" />
       """ + parenthtml + """
       <table class="postform">
         <tbody>
@@ -226,6 +227,7 @@ def renderPage(text, p2pchan, stylesheet, replyto=False, currentpage=0, numpages
     </div>
     <hr>
     <form name="delform" action="/manage" method="get">
+    <input type="hidden" name="token" value=\"""" + p2pchan.makeToken() + """\" />
     """ + text.encode('utf8', 'replace') + """
     <table align="right"><tr><td nowrap align="right">
     <input type="submit" name="refresh" value="Refresh Checked Thread" class="managebutton"> 
@@ -454,6 +456,7 @@ def peerlist(p2pchan):
     for ip in p2pchan.kaishi.peers:
         output = output + "\n<li>" + niceip(p2pchan, ip) + " [<a href=\"#\" onclick=\"changename('" + ip + "')\">Set/change name</a>]</li>"
     output = output + "</ul>\n";
+    output += "<script type=\"text/javascript\">document.refreshPeersToken = " + p2pchan.makeToken() + "\";</script>"
     return output
 
 def listmissingthreads(p2pchan):
@@ -487,10 +490,11 @@ def cactus(p2pchan,request,stylesheet):
     p2pchan.kaishi.sendData('THREAD', request.args['getthread'][0])
     return 'Request sent. Go to thread'
   elif 'addpeer' in request.args:
-    p2pchan.kaishi.addPeer(request.args['addpeer'][0])
+    if hasValidToken(request):
+      p2pchan.kaishi.addPeer(request.args['addpeer'][0])
     return "Added " + request.args['addpeer'][0]
   elif 'setname' in request.args:
-    if "name" in request.args and "ip" in request.args:
+    if "name" in request.args and "ip" in request.args and hasValidToken(request):
       if not p2pchan.config.has_section("names"):
         p2pchan.config.add_section("names")
       peerid = request.args['ip'][0].replace(":", "-")
