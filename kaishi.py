@@ -48,7 +48,7 @@ class kaishi(object):
   def start(self):
     self.socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     self.socket.bind((self.host, self.port, 0, 0))
-    self.socket.settimeout(5)
+    self.socket.settimeout(10)
     thread.start_new_thread(self.receiveData, ())
     thread.start_new_thread(self.pingAllPeers, ())
     thread.start_new_thread(self.pingProvider, ())
