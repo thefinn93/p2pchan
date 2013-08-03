@@ -452,7 +452,7 @@ def peerlist(p2pchan):
     else:
         output = "There is currently " + str(len(p2pchan.kaishi.peers)) + " other user online\n<ul>\n"
     for ip in p2pchan.kaishi.peers:
-        output = output + "\n<li>" + niceip(p2pchan, ip) + "</li>"
+        output = output + "\n<li>" + niceip(p2pchan, ip) + " [<a href=\"#\" onclick=\"changename('" + ip + "')\">Set/change name</a>]</li>"
     output = output + "</ul>\n";
     return output
 
@@ -493,7 +493,7 @@ def cactus(p2pchan,request,stylesheet):
     if "name" in request.args and "ip" in request.args:
       if not p2pchan.config.has_section("names"):
         p2pchan.config.add_section("names")
-      peerid = (request.args['ip'][0] + ":" + str(p2pchan.kaishi.port)).replace(":", "-")
+      peerid = request.args['ip'][0].replace(":", "-")
       p2pchan.config.set("names", peerid, request.args['name'][0])
       f = open(localFile('p2pchan.ini'), 'w')
       p2pchan.config.write(f)

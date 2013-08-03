@@ -200,37 +200,32 @@ class kaishi(object):
       pass
 
     self.nicks.update({peerid: nickname})
-    #self.debugMessage('Set nickname for ' + peerid + ' to ' + nickname)
+    self.debugMessage('Set nickname for ' + peerid + ' to ' + nickname)
 
   def sendDropNotice(self):
     self.sendData('DROP', 'DROP')
 
   def pingAllPeers(self):
-    while 1:
-      for peerid in self.peers:
-        if peerid in self.pings:
-          if time.time() - self.pings[peerid] >= 20:
-            self.dropPeer(peerid)
-            self.debugMessage('Dropping ' + self.getPeerNickname(peerid) + ' (no ping responses for 20 seconds)')
-        else:
-          self.pings.update({peerid: time.time()})
-        self.sendData('PING', 'PING', to=peerid, bounce=False)
-      time.sleep(15)
+    for peerid in self.peers:
+      if peerid in self.pings:
+        if time.time() - self.pings[peerid] >= 20:
+          self.dropPeer(peerid)
+          self.debugMessage('Dropping ' + self.getPeerNickname(peerid) + ' (no ping responses for 20 seconds)')
+      else:
+        self.pings.update({peerid: time.time()})
+      self.sendData('PING', 'PING', to=peerid, bounce=False)
+    time.sleep(15)
+    thread.start_new_thread(self.pingAllPeers, ())
 
   def pingProvider(self):
-    while 1:
-      for provider in self.providers:
-        try:
-          urllib.urlopen(provider + '?port=' + str(self.port)).read()
-        except:
-          pass
-      time.sleep(60)
-
+    time.sleep(60)
+    
   def makePeerList(self):
     peers = {}
     [peers.update({peerid: self.getPeerNickname(peerid)}) for peerid in self.peers]
+    
     return pickle.dumps(peers)
-
+    
   def fetchPeersFromProvider(self):
     cjdns = cjdnsadmin.connectWithAdminInfo()
     more = True
@@ -241,13 +236,14 @@ class kaishi(object):
         self.addPeer(node['ip'] + ":" + str(self.port))
       more = "more" in table
       page += 1
-
   def debugMessage(self, message):
     if self.debug:
       print "DEBUG:", message
-
+      
   def gracefulExit(self):
     self.sendDropNotice()
+    self.socket.close()
+    sys.exit()
 
   @staticmethod
   def peerIDToTuple(peerid):

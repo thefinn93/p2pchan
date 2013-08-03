@@ -53,5 +53,12 @@ function getthread(thread,elm)
  xhr.open("GET","/cactus?getthread=" + thread + "&rand=" + Math.random(),true)
  xhr.send(null)
  }
+ 
+function changename(ip) {
+   name = prompt("What do you want to call " + ip + "?");
+   xhr = new XMLHttpRequest();
+   xhr.open("GET", "/cactus?setname=true&ip=" + ip + "&name=" + name, true);
+   xhr.send(null);
+}
 
-setInterval('refreshPeers()', 500)
+setInterval('refreshPeers()', 500);
